@@ -1,0 +1,37 @@
+version: '3'
+
+
+vars: 
+  VERSION: 
+    sh: git describe --tags --always
+  BUILDTIME:
+    sh: date -u '+%Y%m%d'
+
+
+
+
+
+tasks:
+  install:
+    cmds:
+      - go mod tidy
+
+  fmt:
+    cmds:
+      - go fmt ./...
+      - go vet ./...
+  build:
+    deps:
+      - install
+      - fmt
+    cmds:
+      - rm -rf bin
+      - go build -o bin/durable -ldflags "-X 'github.com/durableio/cli/pkg/version.version={{.VERSION}}' -X 'github.com/durableio/cli/pkg/version.buildTime={{.BUILDTIME}}'" .
+    
+  
+  docker:
+   cmds:
+      - docker build -t chronark/durable:latest -t chronark/durable:{{.VERSION}} .
+      - docker push chronark/durable:latest
+      - docker push chronark/durable:{{.VERSION}}
+    
