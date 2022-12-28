@@ -52,7 +52,7 @@ const parsePackageJson = (packageJson) => {
   const repo = packageJson.repository;
   const url = `https://github.com/${repo}/releases/download/v${version}/${pkgName}_${version}_${platform}_${arch}.tar.gz`;
 
-  let binPath = path.join("bin", "supabase");
+  let binPath = path.join("bin", "durable");
   if (platform == "windows") {
     binPath += ".exe";
   }
@@ -60,9 +60,7 @@ const parsePackageJson = (packageJson) => {
   return { binPath, url };
 };
 
-const errGlobal = `Installing Supabase CLI as a global module is not supported.
-Please use one of the supported package managers: https://github.com/supabase/cli#install-the-cli
-`;
+const errGlobal = "Installing Durable CLI as a global module is not supported.";
 
 /**
  * Reads the configuration from application's package.json,
@@ -104,7 +102,7 @@ async function main() {
   });
 
   // TODO: verify checksums
-  console.info("Installed Supabase CLI successfully");
+  console.info("Installed Durable CLI successfully");
 }
 
 await main();
