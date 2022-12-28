@@ -1,5 +1,6 @@
 # This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
+ 
 before:
   hooks:
     # You may remove this if you don't use go modules.
@@ -9,6 +10,10 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
+    binary: durable
+    ldflags:
+      - -X github.com/durableio/cli/pkg/version.version=$(git describe --tags --always)
+      - -X github.com/durableio/cli/pkg/version.buildTime=$(date -u '+%Y%m%d'
     goos:
       - linux
       - windows
