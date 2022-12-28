@@ -24,12 +24,6 @@ builds:
       - '386'
       - arm
       - arm64
-archives:
-- format: tar
-  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
-checksum:
-  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
-  algorithm: sha256
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 changelog:
