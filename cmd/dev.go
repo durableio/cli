@@ -60,7 +60,7 @@ var devCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(devCmd)
-	devCmd.Flags().String("addr", "localhost:8080", "Host and port where the dev server listens")
+	devCmd.Flags().String("addr", ":8080", "Host and port where the dev server listens")
 
 	// Here you will define your flags and configuration settings.
 
