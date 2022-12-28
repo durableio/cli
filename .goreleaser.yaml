@@ -19,11 +19,11 @@ builds:
       - darwin
       - linux
       - windows
-    # goarch:
-    #   - amd64
-    #   - '386'
-    #   - arm
-    #   - arm64
+    goarch:
+      - amd64
+      - '386'
+      - arm
+      - arm64
 archives:
 - format: tar
   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
