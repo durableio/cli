@@ -9,5 +9,5 @@
 ## Run development server
 
 ```
-npx @durable/cli@latest dev
+npx @durableio/cli@latest dev
 ```
