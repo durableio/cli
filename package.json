@@ -1,5 +1,5 @@
 {
-    "name": "cli",
+    "name": "@durableio/cli",
     "version": "0.0.0-automated",
     "description": "Durable CLI",
     "repository": "durableio/cli",
