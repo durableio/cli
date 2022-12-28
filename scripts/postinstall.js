@@ -49,7 +49,7 @@ const parsePackageJson = (packageJson) => {
     // Build the download url from package.json
     const version = packageJson.version;
     const repo = packageJson.repository;
-    const url = `https://github.com/${repo}/releases/download/v${version}/durable_${version}_${platform}_${arch}.tar.gz`;
+    const url = `https://github.com/${repo}/releases/download/v${version}/durable_${version}_${platform}_${arch}`;
     let binPath = path.join("bin", "durable");
     if (platform === "windows") {
         binPath += ".exe";
@@ -84,7 +84,7 @@ async function main() {
     console.info("Downloading", url );
     const res = await fetch(url);
     if (!res.ok){
-        throw new Error(`Failed to download durable binary: ${res.status}`)
+        throw new Error(`Failed to download durable binary: ${res.status} - ${url}`)
     }
     const fileStream = fs.createWriteStream(binPath);
 
