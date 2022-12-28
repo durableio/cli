@@ -35,14 +35,14 @@ const parsePackageJson = (packageJson) => {
   const arch = ARCH_MAPPING[process.arch];
   if (!arch) {
     throw Error(
-      "Installation is not supported for this architecture: " + process.arch
+      `Installation is not supported for this architecture: ${process.arch}`
     );
   }
 
   const platform = PLATFORM_MAPPING[process.platform];
   if (!platform) {
     throw Error(
-      "Installation is not supported for this platform: " + process.platform
+      `Installation is not supported for this platform: ${process.platform}`
     );
   }
 
