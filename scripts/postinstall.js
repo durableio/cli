@@ -49,8 +49,7 @@ const parsePackageJson = (packageJson) => {
     // Build the download url from package.json
     const version = packageJson.version;
     const repo = packageJson.repository;
-    const url = `https://github.com/${repo}/releases/download/v${version}/cli_${version}_${platform}_${arch}.tar.gz`;
-
+    const url = `https://github.com/${repo}/releases/download/v${version}/durable_${version}_${platform}_${arch}.tar.gz`;
     let binPath = path.join("bin", "durable");
     if (platform === "windows") {
         binPath += ".exe";
