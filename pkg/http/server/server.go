@@ -14,7 +14,6 @@ import (
 
 type Config struct {
 	Logger  logging.Logger
-	Addr    string
 	Durable durable.Durable
 }
 

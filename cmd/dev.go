@@ -4,6 +4,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/durableio/cli/pkg/durable"
@@ -30,7 +31,7 @@ var devCmd = &cobra.Command{
 		viper.SetEnvPrefix("DURABLE")
 		viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
-		addr := viper.GetString("addr")
+		port := viper.GetString("port")
 
 		d := durable.New(durable.Config{Logger: logger})
 		go func() {
@@ -41,7 +42,6 @@ var devCmd = &cobra.Command{
 		}()
 
 		srv, err := server.New(server.Config{
-			Addr:    addr,
 			Durable: d,
 			Logger:  logger,
 		})
@@ -49,7 +49,7 @@ var devCmd = &cobra.Command{
 			logger.Fatal().Err(err).Send()
 
 		}
-		err = srv.Listen(addr)
+		err = srv.Listen(fmt.Sprintf(":%s", port))
 		if err != nil {
 			logger.Fatal().Err(err).Send()
 
@@ -60,7 +60,7 @@ var devCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(devCmd)
-	devCmd.Flags().String("addr", ":8080", "Host and port where the dev server listens")
+	devCmd.Flags().String("port", "8080", "The port where the dev server listens")
 
 	// Here you will define your flags and configuration settings.
 
