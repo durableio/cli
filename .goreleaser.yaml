@@ -15,15 +15,22 @@ builds:
     ldflags:
       - -X github.com/durableio/cli/pkg/version.version=$(git describe --tags --always)
       - -X github.com/durableio/cli/pkg/version.buildTime=$(date -u '+%Y%m%d'
-    targets:
-      - darwin_amd64
-      - darwin_arm64
-      - linux_amd64
-      - linux_arm64
-      - windows_amd64
-
+    goos:
+      - freebsd
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - '386'
+      - arm
+      - arm64
+archives:
+- format: zip
+  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 checksum:
-  name_template: 'checksums.txt'
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 changelog:
@@ -32,7 +39,3 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
-
-# modelines, feel free to remove those if you don't want/use them:
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
