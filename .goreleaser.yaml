@@ -16,15 +16,14 @@ builds:
       - -X github.com/durableio/cli/pkg/version.version={{.Version}}
       - -X github.com/durableio/cli/pkg/version.buildTime=$(date -u '+%Y%m%d'
     goos:
-      - freebsd
-      - windows
-      - linux
       - darwin
-    goarch:
-      - amd64
-      - '386'
-      - arm
-      - arm64
+      - linux
+      - windows
+    # goarch:
+    #   - amd64
+    #   - '386'
+    #   - arm
+    #   - arm64
 archives:
 - format: tar
   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
