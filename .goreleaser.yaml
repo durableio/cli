@@ -14,7 +14,7 @@ builds:
     binary: durable
     ldflags:
       - -X github.com/durableio/cli/pkg/version.version={{.Version}}
-      - -X github.com/durableio/cli/pkg/version.buildTime=$(date -u '+%Y%m%d'
+      - -X github.com/durableio/cli/pkg/version.buildTime={{.Date}}
     goos:
       - darwin
       - linux
