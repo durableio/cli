@@ -90,17 +90,17 @@ async function main() {
     // fs.mkdirSync(binPath, { recursive: true })
     const fileStream = fs.createWriteStream(binName);
 
-
-    // Link the binaries in postinstall to support yarn
-    await binLinks({
-        path: path.resolve("."),
-        pkg: { ...pkg, bin: { [pkg.name]: binPath } },
-    });
     await new Promise((resolve, reject) => {
         res.body.pipe(fileStream);
         res.body.on("error", reject);
         fileStream.on("finish", resolve);
     });
+    // Link the binaries in postinstall to support yarn
+    await binLinks({
+        path: path.resolve("."),
+        pkg: { ...pkg, bin: { [pkg.name]: binPath } },
+    });
+   
 
 
     // TODO: verify checksums
