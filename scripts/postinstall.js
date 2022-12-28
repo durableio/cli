@@ -82,13 +82,12 @@ async function main() {
     await fs.promises.mkdir(binDir, { recursive: true });
 
     // First we will Un-GZip, then we will untar.
-    const ungz = zlib.createGunzip();
     const binName = path.basename(binPath);
-    const untar = tar.extract({ path: binName });
 
 
-    console.info("Downloading", url2);
-    const res = await fetch(url2);
+    console.info("Downloading", );
+    const res = await fetch(url);
+    // fs.mkdirSync(binPath, { recursive: true })
     const fileStream = fs.createWriteStream(binName);
 
 
