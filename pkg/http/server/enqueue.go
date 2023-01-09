@@ -7,7 +7,6 @@ import (
 	"github.com/durableio/cli/pkg/durable"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/segmentio/ksuid"
 )
 
 type EnqueueRequest struct {
@@ -41,8 +40,9 @@ func (r EnqueueRequest) validate() error {
 }
 
 type EnqueueResponse struct {
-	WorkflowId durable.WorkflowId `json:"workflowId"`
-	StepId     durable.StepId     `json:"stepId"`
+	ReadWorkflowToken string             `json:"readWorkflowToken"`
+	WorkflowId        durable.WorkflowId `json:"workflowId"`
+	StepId            durable.StepId     `json:"stepId"`
 }
 
 func (s *Server) enqueue(c *fiber.Ctx) error {
@@ -57,15 +57,11 @@ func (s *Server) enqueue(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.ErrBadRequest.Code, err.Error())
 	}
 	s.logger.Debug().Interface("req", req).Send()
-	step := &durable.Step{}
+	step := durable.EnqueueRequest{}
 	step.WorkflowId = req.WorkflowId
-	if step.WorkflowId == "" {
-		step.WorkflowId = durable.WorkflowId(fmt.Sprintf("wf_%s", ksuid.New().String()))
-	}
-	step.Id = durable.StepId(fmt.Sprintf("st_%s", ksuid.New().String()))
 
 	step.Body.Method = req.Method
-	step.Name = req.StepName
+	step.StepName = req.StepName
 	step.CallbackUrl = req.CallbackUrl
 	step.Body.Url = req.Url
 	step.Body.Header = http.Header{}
@@ -73,14 +69,16 @@ func (s *Server) enqueue(c *fiber.Ctx) error {
 		step.Body.Header.Add(k, v)
 	}
 	step.Body.Body = req.Body
-	s.logger.Info().Str("step", step.Name).Msg("Received")
-	err = s.durable.Enqueue(c.UserContext(), step)
+	s.logger.Info().Str("step", step.StepName).Msg("Received")
+	res, err := s.durable.Enqueue(c.UserContext(), step)
 	if err != nil {
 		return fiber.NewError(fiber.ErrInternalServerError.Code, err.Error())
 	}
+
 	return c.JSON(EnqueueResponse{
-		WorkflowId: step.WorkflowId,
-		StepId:     step.Id,
+		ReadWorkflowToken: res.ReadWorkflowToken,
+		WorkflowId:        res.WorkflowId,
+		StepId:            res.StepId,
 	})
 
 }

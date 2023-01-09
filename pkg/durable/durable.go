@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/segmentio/ksuid"
 	"io"
 	"net/http"
 	"sync"
@@ -12,6 +14,7 @@ import (
 
 	"github.com/durableio/cli/pkg/cache"
 	"github.com/durableio/cli/pkg/logging"
+	"github.com/durableio/cli/pkg/tokens"
 )
 
 type WorkflowId string
@@ -25,7 +28,7 @@ type StepId string
 type Step struct {
 	sync.RWMutex
 	WorkflowId  WorkflowId
-	Id          StepId
+	StepId      StepId
 	Name        string
 	CallbackUrl string
 	Body        struct {
@@ -41,7 +44,21 @@ type Step struct {
 	}
 }
 
+type EnqueueRequest struct {
+	// WorkflowId is optional and will be generated if empty
+	WorkflowId  WorkflowId
+	StepName    string
+	CallbackUrl string
+	Body        struct {
+		Method string
+		Url    string
+		Header http.Header
+		Body   string
+	}
+}
+
 type durable struct {
+	tm          *tokens.TokenManager
 	close       chan struct{}
 	logger      logging.Logger
 	stepCounter atomic.Int64
@@ -50,25 +67,57 @@ type durable struct {
 	workflows   cache.Cache[*Workflow]
 }
 
-func (d *durable) Enqueue(ctx context.Context, step *Step) error {
+func (d *durable) Enqueue(ctx context.Context, req EnqueueRequest) (EnqueueResponse, error) {
+	step := &Step{
+		WorkflowId:  req.WorkflowId,
+		StepId:      StepId(fmt.Sprintf("st_%s", ksuid.New().String())),
+		Name:        req.StepName,
+		CallbackUrl: req.CallbackUrl,
+		Body:        req.Body,
+	}
+	if step.WorkflowId == "" {
+		step.WorkflowId = WorkflowId(fmt.Sprintf("wf_%s", ksuid.New().String()))
+	}
 	if !d.workflows.Contains(string(step.WorkflowId)) {
 		d.workflows.Set(string(step.WorkflowId), &Workflow{WorkflowId: step.WorkflowId, StepIds: []StepId{}})
 	}
 
 	wf, err := d.workflows.Get(string(step.WorkflowId))
 	if err != nil {
-		return err
+		return EnqueueResponse{}, err
 	}
 	wf.Lock()
 	defer wf.Unlock()
-	wf.StepIds = append(wf.StepIds, step.Id)
-	d.steps.Set(string(step.Id), step)
+	wf.StepIds = append(wf.StepIds, step.StepId)
+	d.steps.Set(string(step.StepId), step)
 	d.queue <- step
 	d.stepCounter.Add(1)
-	return nil
+
+	readWorkflowToken, err := d.tm.CreateWorkflowToken(string(step.WorkflowId))
+	if err != nil {
+		return EnqueueResponse{}, err
+	}
+	return EnqueueResponse{
+		StepId:            step.StepId,
+		WorkflowId:        step.WorkflowId,
+		ReadWorkflowToken: readWorkflowToken,
+	}, nil
 }
 func (d *durable) GetWorkflow(workflowId WorkflowId) (*Workflow, error) {
-	return d.workflows.Get(string(workflowId))
+	wf, err := d.workflows.Get(string(workflowId))
+	return wf, err
+}
+
+func (d *durable) GetWorkflowFromToken(token string) (*Workflow, error) {
+	workflowId, err := d.tm.ParseWorkflowToken(token)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse token: %w", err)
+	}
+	wf, err := d.workflows.Get(workflowId)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find workflow: %w", err)
+	}
+	return wf, nil
 }
 func (d *durable) GetStep(stepId StepId) (*Step, error) {
 	return d.steps.Get(string(stepId))
@@ -81,7 +130,7 @@ func (d *durable) Run() error {
 			return nil
 
 		case step := <-d.queue:
-			logger := d.logger.With().Str("workflowId", string(step.WorkflowId)).Str("stepId", string(step.Id)).Logger()
+			logger := d.logger.With().Str("workflowId", string(step.WorkflowId)).Str("stepId", string(step.StepId)).Logger()
 			logger.Info().Msg("Handling step")
 			buf := bytes.NewBuffer(nil)
 
@@ -172,10 +221,17 @@ func (d *durable) Close() {
 	d.close <- struct{}{}
 }
 
+type EnqueueResponse struct {
+	StepId            StepId
+	WorkflowId        WorkflowId
+	ReadWorkflowToken string
+}
+
 type Durable interface {
-	Enqueue(ctx context.Context, step *Step) error
+	Enqueue(ctx context.Context, req EnqueueRequest) (EnqueueResponse, error)
 	Run() error
 	GetWorkflow(workflowId WorkflowId) (*Workflow, error)
+	GetWorkflowFromToken(token string) (*Workflow, error)
 	GetStep(stepId StepId) (*Step, error)
 }
 
@@ -183,13 +239,18 @@ type Config struct {
 	Logger logging.Logger
 }
 
-func New(cfg Config) Durable {
+func New(cfg Config) (Durable, error) {
+	tm, err := tokens.Bootstrap()
+	if err != nil {
+		return nil, err
+	}
 	return &durable{
+		tm:          tm,
 		close:       make(chan struct{}),
 		logger:      cfg.Logger,
 		stepCounter: atomic.Int64{},
 		queue:       make(chan *Step, 128),
 		steps:       cache.NewInMemoryCache[*Step](time.Hour),
 		workflows:   cache.NewInMemoryCache[*Workflow](time.Hour),
-	}
+	}, nil
 }
