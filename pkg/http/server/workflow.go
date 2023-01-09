@@ -2,8 +2,8 @@ package server
 
 import (
 	"net/http"
+	"strings"
 
-	"github.com/durableio/cli/pkg/durable"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -23,24 +23,24 @@ type PollResponse struct {
 	Steps []step `json:"steps"`
 }
 
-func (s *Server) poll(c *fiber.Ctx) error {
-	workflowId := c.Params("workflowId")
+func (s *Server) workflow(c *fiber.Ctx) error {
 
-	wf, err := s.durable.GetWorkflow(durable.WorkflowId(workflowId))
+	token := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
+	wf, err := s.durable.GetWorkflowFromToken(token)
 	if err != nil {
-		return fiber.NewError(fiber.ErrInternalServerError.Code, "Unable to load workflow")
+		return fiber.NewError(fiber.ErrInternalServerError.Code, err.Error())
 	}
 
 	steps := []step{}
 	for _, stepId := range wf.StepIds {
 		s, err := s.durable.GetStep(stepId)
 		if err != nil {
-			return fiber.NewError(fiber.ErrInternalServerError.Code, "Unable to load step")
+			return fiber.NewError(fiber.ErrInternalServerError.Code, err.Error())
 		}
 
 		ss := step{
 			WorkflowId: string(s.WorkflowId),
-			Id:         string(s.Id),
+			Id:         string(s.StepId),
 			Name:       s.Name,
 			Done:       s.Done,
 		}

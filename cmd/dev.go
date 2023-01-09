@@ -33,7 +33,10 @@ var devCmd = &cobra.Command{
 
 		port := viper.GetString("port")
 
-		d := durable.New(durable.Config{Logger: logger})
+		d, err := durable.New(durable.Config{Logger: logger})
+		if err != nil {
+			logger.Fatal().Err(err).Send()
+		}
 		go func() {
 			err := d.Run()
 			if err != nil {

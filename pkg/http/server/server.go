@@ -56,7 +56,7 @@ func New(cfg Config) (*Server, error) {
 	})
 	v1 := s.app.Group("/v1")
 	v1.Post("/enqueue", s.enqueue)
-	v1.Get("/poll/:workflowId", s.poll)
+	v1.Get("/workflows", s.workflow)
 
 	return s, nil
 

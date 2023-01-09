@@ -3,12 +3,15 @@ module github.com/durableio/cli
 go 1.19
 
 require (
+	github.com/btcsuite/btcutil v1.0.2
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/gofiber/fiber/v2 v2.40.1
+	github.com/google/uuid v1.1.2
 	github.com/rs/zerolog v1.28.0
 	github.com/segmentio/ksuid v1.0.4
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
+	google.golang.org/protobuf v1.28.1
 )
 
 require (

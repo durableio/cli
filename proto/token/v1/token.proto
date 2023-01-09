@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package token.v1;
+
+option go_package = "github.com/durableio/cli/gen/proto/token/v1;tokenv1";
+
+message SignedToken {
+  bytes token = 1;
+  bytes signature = 2;
+}
+message ReadWorkflowToken {
+  string version = 1;
+  string workflow_id = 2;
+  int64 expire_at = 3;
+}
